@@ -1,0 +1,45 @@
+import numpy as np
+from scipy.stats import norm
+
+def black_scholes(S, K, T, r, sigma, option_type="call"):
+    """
+    Black-Scholes formula for European call and put options.
+    
+    Parameters:
+    S : float : Current stock price
+    K : float : Strike price
+    T : float : Time to maturity (in years)
+    r : float : Risk-free interest rate (annualized)
+    sigma : float : Volatility of the underlying stock (annualized)
+    option_type : str : "call" for call option, "put" for put option
+    
+    Returns:
+    float : Option price
+    """
+    # Calculate d1 and d2
+    d1 = (np.log(S / K) + (r + (sigma ** 2) / 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    
+    if option_type == "call":
+        # Call option price
+        price = S * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    elif option_type == "put":
+        # Put option price
+        price = K * np.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+    else:
+        raise ValueError("Invalid option type. Choose 'call' or 'put'.")
+    
+    return price
+
+# Example usage:
+S = 100    # Current stock price
+K = 105    # Strike price
+T = 1      # Time to maturity (1 year)
+r = 0.05   # Risk-free rate (5%)
+sigma = 0.2 # Volatility (20%)
+
+call_price = black_scholes(S, K, T, r, sigma, option_type="call")
+put_price = black_scholes(S, K, T, r, sigma, option_type="put")
+
+print(f"Call Option Price: {call_price:.2f}")
+print(f"Put Option Price: {put_price:.2f}")
