@@ -1,0 +1,35 @@
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+# Example: Generating a synthetic dataset
+np.random.seed(42)
+data = np.random.rand(100, 5)  # 100 samples with 5 features
+df = pd.DataFrame(data, columns=["Feature1", "Feature2", "Feature3", "Feature4", "Feature5"])
+
+# Step 1: Standardize the data
+scaler = StandardScaler()
+data_scaled = scaler.fit_transform(df)
+
+# Step 2: Perform PCA
+pca = PCA(n_components=2)  # Reduce to 2 components
+principal_components = pca.fit_transform(data_scaled)
+
+# Step 3: Create a DataFrame with principal components
+pca_df = pd.DataFrame(data=principal_components, columns=["Principal Component 1", "Principal Component 2"])
+
+# Step 4: Explained variance
+explained_variance = pca.explained_variance_ratio_
+
+print("Explained Variance Ratio:", explained_variance)
+
+# Step 5: Visualize the results
+plt.figure(figsize=(8, 6))
+plt.scatter(pca_df["Principal Component 1"], pca_df["Principal Component 2"], alpha=0.7)
+plt.title("PCA: 2 Principal Components")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.grid()
+plt.show()
