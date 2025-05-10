@@ -1,0 +1,60 @@
+import numpy as np
+import random
+from scipy.stats import pearsonr
+
+# Simulated dataset
+def generate_data(num_stocks=100, time_window=30):
+    X = np.random.randn(num_stocks, 13, time_window)  # 13 features
+    y = np.random.randn(num_stocks)
+    return X, y
+
+# Define a basic alpha structure
+class Alpha:
+    def __init__(self, operations=None):
+        self.operations = operations or self.random_operations()
+    
+    def random_operations(self, num_ops=5):
+        return [random.choice(["add", "sub", "mul", "tan", "min", "max"]) for _ in range(num_ops)]
+    
+    def predict(self, X):
+        # Simplified prediction logic
+        return np.tanh(np.mean(X, axis=(1, 2)))  # Just a dummy logic
+
+    def mutate(self):
+        mutated_ops = self.operations.copy()
+        if random.random() < 0.5 and mutated_ops:
+            # Replace an operation
+            idx = random.randint(0, len(mutated_ops)-1)
+            mutated_ops[idx] = random.choice(["add", "sub", "mul", "tan", "min", "max"])
+        else:
+            # Insert or delete operation
+            if random.random() < 0.5 and len(mutated_ops) > 1:
+                mutated_ops.pop(random.randint(0, len(mutated_ops)-1))
+            else:
+                mutated_ops.append(random.choice(["add", "sub", "mul", "tan", "min", "max"]))
+        return Alpha(mutated_ops)
+
+    def __str__(self):
+        return f"Alpha({self.operations})"
+
+# Fitness function: approximate Information Coefficient (IC)
+def fitness(alpha, X, y):
+    pred = alpha.predict(X)
+    return pearsonr(pred, y)[0]  # IC
+
+# Evolutionary loop
+def evolve(initial_alpha, X, y, generations=10, population_size=20):
+    population = [initial_alpha.mutate() for _ in range(population_size)]
+    for gen in range(generations):
+        scored = [(alpha, fitness(alpha, X, y)) for alpha in population]
+        scored.sort(key=lambda x: x[1], reverse=True)
+        best = scored[0][0]
+        print(f"Generation {gen}: Best IC = {scored[0][1]:.4f}, Alpha = {best}")
+        # Tournament selection & mutation
+        population = [best] + [best.mutate() for _ in range(population_size - 1)]
+    return best
+
+# Run AlphaEvolve
+X, y = generate_data()
+initial_alpha = Alpha()
+best_alpha = evolve(initial_alpha, X, y)
