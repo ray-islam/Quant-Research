@@ -1,0 +1,49 @@
+# A cost- and risk-aware mean-variance optimizer selects portfolio weights that maximize expected returns while minimizing risk and accounting for transaction costs and real-world constraints.
+import numpy as np
+import cvxpy as cp
+import pandas as pd
+
+# Step 1: Inputs
+n_assets = 4
+expected_returns = np.array([0.08, 0.12, 0.10, 0.07])
+cov_matrix = np.array([
+    [0.1, 0.02, 0.04, 0.01],
+    [0.02, 0.12, 0.03, 0.02],
+    [0.04, 0.03, 0.11, 0.02],
+    [0.01, 0.02, 0.02, 0.09]
+])
+prev_weights = np.array([0.25, 0.25, 0.25, 0.25])  # previous portfolio
+
+# Step 2: Parameters
+risk_aversion = 0.5
+cost_penalty = 0.1
+transaction_cost_rate = 0.005  # 0.5%
+
+# Step 3: Define Optimization Variable
+weights = cp.Variable(n_assets)
+
+# Step 4: Objective Function
+expected_return = expected_returns @ weights
+risk = cp.quad_form(weights, cov_matrix)
+transaction_cost = cp.norm1(weights - prev_weights) * transaction_cost_rate
+
+objective = cp.Maximize(expected_return - risk_aversion * risk - cost_penalty * transaction_cost)
+
+# Step 5: Constraints
+constraints = [
+    cp.sum(weights) == 1,
+    weights >= 0,
+    weights <= 1
+]
+
+# Step 6: Solve the Problem
+problem = cp.Problem(objective, constraints)
+problem.solve()
+
+# Step 7: Display Results
+optimized_weights = weights.value.round(4)
+df = pd.DataFrame({
+    'Asset': [f'Asset {i+1}' for i in range(n_assets)],
+    'Optimized Weight': optimized_weights
+})
+print(df)
